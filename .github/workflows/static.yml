@@ -1,43 +1,190 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+settings:
+  gridSpace: 30
+  gameEdgeLeft: 150
+  gameEdgeRight: 450
+  colors:
+    - '#dca3ff'
+    - '#ff90a0'
+    - '#80ffb4'
+    - '#ff7666'
+    - '#70b3f5'
+    - '#b2e77d'
+    - '#ffd700'
 
-on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
+variables:
+  fallingPiece: null
+  gridPieces: []
+  lineFades: []
+  gridWorkers: []
+  currentScore: 0
+  currentLevel: 1
+  linesCleared: 0
+  ticks: 0
+  updateEvery: 15
+  updateEveryCurrent: 15
+  fallSpeed: 15
+  pauseGame: false
+  gameOver: false
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+setup:
+  createCanvas:
+    width: 600
+    height: 540
+  fallingPiece: new PlayPiece
+  fallingPiece.resetPiece
+  textFont: Ubuntu
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+draw:
+  background: '#e1eeb0'
+  fill: 25
+  noStroke: null
+  rect:
+    - [gameEdgeRight, 0, 150, height]
+    - [0, 0, gameEdgeLeft, height]
+    - [450, 80, 150, 70]
+    - [460, 405, 130, 130, 5]
+    - [460, 210, 130, 60, 5]
+    - [460, 280, 130, 60, 5]
+    - [450, 85, 150, 20]
+    - [450, 110, 150, 4]
+    - [450, 140, 150, 4]
+    - [460, 60, 130, 35, 5]
+    - [465, 65, 120, 25, 5]
+    - [465, 410, 120, 120, 5]
+    - [465, 215, 120, 50, 5]
+    - [465, 285, 120, 50, 5]
+  fill: 25
+  noStroke: null
+  textSize: 24
+  textAlign: CENTER
+  text: ["Score", 525, 85]
+  text: ["Level", 525, 238]
+  text: ["Lines", 525, 308]
+  fill: 255
+  noStroke: null
+  textSize: 24
+  textAlign: RIGHT
+  text: [currentScore, 560, 135]
+  text: [currentLevel, 560, 260]
+  text: [linesCleared, 560, 330]
+  stroke: '#0d0d0d'
+  line: [gameEdgeRight, 0, gameEdgeRight, height]
+  fallingPiece.show
+  if:
+    keyIsDown: DOWN_ARROW
+  else:
+    updateEvery: updateEveryCurrent
+  if:
+    not: pauseGame
+    then:
+      ticks: ['+=', 1]
+      if:
+        '===': [ticks, updateEvery]
+        then:
+          ticks: 0
+          fallingPiece.fall: fallSpeed
+  for: {i: 0, condition: "<", length: gridPieces.length, step: 1}
+    gridPieces[i].show
+  for: {i: 0, condition: "<", length: lineFades.length, step: 1}
+    lineFades[i].show
+  if: ['>', gridWorkers.length, 0]
+    gridWorkers[0].work
+  textAlign: CENTER
+  fill: 255
+  noStroke: null
+  textSize: 14
+  text: |
+    Controls:
+    ↑
+    ← ↓ →
+    Left and Right:
+    move side to side
+    Up:
+    rotate
+    Down:
+    fall faster
+    R:
+    reset game
+  if: gameOver
+    then:
+      fill: '#0d0d0d'
+      textSize: 54
+      textAlign: CENTER
+      text: "Game Over!", [300, 270]
+  strokeWeight: 3
+  stroke: '#304550'
+  noFill: null
+  rect: [0, 0, width, height]
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+keyPressed:
+  if: ['===', keyCode, 82]
+    resetGame
+  if: ['not', pauseGame]
+    then:
+      if: ['===', keyCode, LEFT_ARROW]
+        fallingPiece.input: LEFT_ARROW
+      else if: ['===', keyCode, RIGHT_ARROW]
+        fallingPiece.input: RIGHT_ARROW
+      else if: ['===', keyCode, UP_ARROW]
+        fallingPiece.input: UP_ARROW
 
-jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+PlayPiece:
+  constructor:
+    pos: [0, 0]
+    rotation: 0
+    nextPieceType: ['floor', ['*', ['Math.random'], 7]]
+    nextPieces: []
+    pieceType: 0
+    pieces: []
+    orientation: []
+    fallen: false
+  nextPiece:
+    nextPieceType: pseudoRandom: pieceType
+    nextPieces: []
+    points: orientPoints: [nextPieceType, 0]
+    xx: 525
+    yy: 490
+    if:
+      '!==': [nextPieceType, 0]
+      '&&': [{ '!==': [nextPieceType, 3] }, { '!==': [nextPieceType, 5] }]
+        then:
+          xx: ['+=', ['*', gridSpace, 0.5]]
+      '===': [nextPieceType, 5]
+        then:
+          xx: ['-=', ['*', gridSpace, 0.5]]
+    for: {i: 0, condition: "<", length: 4, step: 1}
+      nextPieces.push: {pos: [xx + ['*', points[i][0], gridSpace], yy + ['*', points[i][1], gridSpace]], type: nextPieceType}
+  fall:
+    if:
+      not: futureCollision: [0, amount, rotation]
+        then:
+          addPos: [0, amount]
+          fallen: true
+        else:
+          if:
+            not: fallen
+              then:
+                pauseGame: true
+                gameOver: true
+              else:
+                commitShape
+  resetPiece:
+    rotation: 0
+    fallen: false
+    pos: [330, -60]
+    pieceType: nextPieceType
+    nextPiece
+    newPoints
+  newPoints:
+    points: orientPoints: [pieceType, rotation]
+    orientation: points
+    pieces: []
+    for: {i: 0, condition: "<", length: points.length, step: 1}
+      pieces.push: {pos: [pos.x + ['*', points[i][0], gridSpace], pos.y + ['*', points[i][1], gridSpace]], type: pieceType}
+  updatePoints:
+    if: pieces
+      then:
+        points: orientPoints: [pieceType, rotation]
+        orientation: points
+        for: {i: 0, condition: "<", length: 4, step
+
