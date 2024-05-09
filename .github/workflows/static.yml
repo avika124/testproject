@@ -45,7 +45,7 @@ functions:
       - scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
       - X = []
       - y = []
-      - for: {i: 0, condition: "<", length: len(scaled_data) - look_back}
+      - for: {i: 0, condition: "<", length: len(scaled_data) - look_back, step: 1}
         - X.append(scaled_data[i:(i + look_back), 0])
         - y.append(scaled_data[i + look_back, 0])
       - return: [(*numpy_import).array(X), (*numpy_import).array(y)]
