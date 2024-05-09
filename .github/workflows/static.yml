@@ -48,7 +48,7 @@ functions:
       - for: {i: 0, condition: "<", length: len(scaled_data) - look_back}
         - X.append(scaled_data[i:(i + look_back), 0])
         - y.append(scaled_data[i + look_back, 0])
-      - return: [numpy_import().array(X), numpy_import().array(y)]
+      - return: [numpy_import().array(X), *numpy_import().array(y)]
 
   build_model:
     description: Build and train the neural network model
