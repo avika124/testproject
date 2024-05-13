@@ -1,6 +1,6 @@
-pandas
 numpy
-matplotlib
+pandas
 yfinance
-sklearn
-keras
+matplotlib
+tensorflow
+scikit-learn
